@@ -48,6 +48,59 @@ def shuffle(original_list: list):
         original_list.pop(random_index)
     return new_list
 
+# a function to check input card
+def check_input_card(card_name: str) -> bool:
+    pass
+
+# converts string card into object card
+# (returns object card if it is in hand: if it's not there, asks to try again)
+def fetch_card(card_name: str, hand: list["Card"]) -> "Card":
+    
+    assert len(card_name) >= 2
+
+    card_value = 0
+    card_suit = ""
+    
+    if len(card_name) == 3:
+        card_value = 10
+        if card_name[2] == "h":
+            card_suit = "hearts"
+        elif card_name[2] == "s":
+            card_suit = "spades"
+        elif card_name[2] == "c":
+            card_suit = "clubs"
+        elif card_name[2] == "d":
+            card_suit = "diamonds"
+    
+    if len(card_name) == 2:
+        if card_name[0] == "J":
+            card_value = 11
+        elif card_name[0] == "Q":
+            card_value = 12
+        elif card_name[0] == "K":
+            card_value = 13
+        elif card_name[0] == "A":
+            card_value = 14
+
+        if card_name[1] == "h": #s c d
+            card_suit = "hearts"
+        elif card_name[1] == "s":
+            card_suit = "spades"
+        elif card_name[1] == "c":
+            card_suit = "clubs"
+        elif card_name[1] == "d":
+            card_suit = "diamonds"
+
+        if card_name[0] in ["6", "7", "8", "9"]:
+            card_value = int(card_name[0])
+
+    for card in hand: # use filter instead later
+        if card.value == card_value and card.suit == card_suit:
+            return card
+        
+    print("ERROR! Try again!")
+    return None
+
 class Player:
 
     def __init__(self, name: str):
@@ -137,9 +190,16 @@ def start_game():
     print("\nThe first one to make a move is " + who_moves.name + "!")
 
     while True: # tut budet is_finished peremennaya, kotoraya buted proveryat, est li karty v rukah oboih igrokov
+        
         print("\n" + who_moves.name + ", it's your turn.")
-        print("Here's your hand: " + who_moves.hand)
+        print("Here's your hand: " + str(who_moves.hand))
         print("The trump suit is " + trump.suit) # add background color for trump cards
+        
+        request_attack_card = input(who_moves.name + ", pick a card to attack:")
+        # function to convert input card into card object
+        # check if it's correct and is in hand
+
+        print(fetch_card(request_attack_card, who_moves.hand))
 
         break
 
