@@ -48,14 +48,12 @@ def shuffle(original_list: list):
         original_list.pop(random_index)
     return new_list
 
-# a function to check input card
-def check_input_card(card_name: str) -> bool:
-    pass
 
 # converts string card into object card
 # (returns object card if it is in hand: if it's not there, asks to try again)
+# if successful, removes card from hand and appends to the list of field cards
 # dumb but works - will later refine it
-def fetch_card(card_name: str, hand: list["Card"]) -> "Card":
+def fetch_card(card_name: str, hand: list["Card"], field_cards: list["Card"]) -> "Card":
     
     assert len(card_name) >= 2
 
@@ -97,6 +95,8 @@ def fetch_card(card_name: str, hand: list["Card"]) -> "Card":
 
     for card in hand: # use filter instead later
         if card.value == card_value and card.suit == card_suit:
+            hand.remove(card)
+            field_cards.append(card)
             return card
         
     print("It's either a typo, or there's no such card. Try again!")
@@ -159,9 +159,11 @@ def start_game():
 
     deck = shuffle(deck)
 
+    discarded_pile = [] #stores all played and discarded cards
+
     trump = deck[0]
-    print("The trump card is " + trump.__repr__() + "!")
-    print("The trump suit is " + trump.suit + "!\n")
+    print(f"The trump card is {trump.__repr__()}!")
+    print(f"The trump suit is {trump.suit}!\n")
 
     player_1 = Player(input("Hey Player_1, enter your name!\n").strip())
     player_2 = Player(input("Hey Player_2, now you enter your name!\n").strip())
@@ -196,25 +198,79 @@ def start_game():
 
     print("\nThe first one to make a move is " + who_moves.name + "!")
 
-    while True: # tut budet is_finished peremennaya, kotoraya buted proveryat, est li karty v rukah oboih igrokov
+    while True:
+        # will later add is_game_finished var or function->bool
+        #to check if both players have cards left, and the game should continue
         
-        print("\n" + who_moves.name + ", it's your turn.")
-        print_info(who_moves, trump) # add background color for trump cards
+        while True:
+            # will later add a variable is_turn_finished to check if it's time for a new turn
+            # when this turn ends, goes back to previous while loop to check if the game has finished
+            
+            cards_on_the_field = [] #keeps track of all cards currently in play
+
+            print("\n" + who_moves.name + ", it's your turn.")
+            print_info(who_moves, trump) # add background color for trump cards
+            
+            input_attack_card = input(who_moves.name + ", pick a card to attack:")
+            # function to convert input card into card object
+            # check if it's correct and is in hand
+
+            attack_card = fetch_card(input_attack_card, who_moves.hand, cards_on_the_field)
+
+            print(attack_card)
+
+            valid_defence_cards = []
+
+            if if_deffence_possible(attack_card, who_defends, trump, valid_defence_cards) == True:
+
+                print(f"\n{who_defends.name}, defend yourself!")
+                print_info(who_defends, trump)
+                print(f"These cards are valid for defence: {valid_defence_cards}.")
+
+                input_defend_card = input(f"{who_defends.name}, pick a card for defence - or type PASS to take:")
+                # if defend_card.lower().strip() == pass:
+                # who_defends.hand.append(cards_on_the_field)
+                # break
+                defence_card = fetch_card(input_defend_card, who_defends.hand, cards_on_the_field)
+            
+                if defence_card in valid_defence_cards:
+                    print(defence_card)
+                else:
+                    print(f"{who_defends.name}, it's not a valid choice - try something else.")
+
+            else:
+                print(f"Deffence is not possible. {who_defends.name}, you take.")
+                who_defends.hand.append(cards_on_the_field)
+
+            break
         
-        attack_card = input(who_moves.name + ", pick a card to attack:")
-        # function to convert input card into card object
-        # check if it's correct and is in hand
-
-        print(fetch_card(attack_card, who_moves.hand))
-
-        print(f"\n {who_defends.name}, defend yourself!.")
-        print_info(who_defends, trump)
-
-        defend_card = input(f"{who_moves.name}, pick a card for defence:")
-        print(fetch_card(defend_card, who_defends.hand))
-
         break
 
+# checks if there is a possible move for defence (print_info will also go here)
+# appends a list of possible defence cards for current move
+def if_deffence_possible(attack_card, defender, trump, defence_cards_list) -> bool:
+    if attack_card.suit != trump.suit:
+        for card in defender.hand:
+            if card.value > attack_card.value and card.suit == attack_card.suit:
+                defence_cards_list.append(card)
+                return True
+            elif card.suit == trump.suit:
+                defence_cards_list.append(card)
+                return True
+        else:
+            return False
+            
+    if attack_card.suit == trump.suit:
+        for card in defender.hand:
+            if card.suit == trump.suit and card.value > attack_card.value:
+                defence_cards_list.append(card)
+                return True
+            else:
+                return False
+
+# manages successful defence
+def cards_clash(attack_card: Card, defend_card: Card, trump: Card) -> bool:
+    pass
 
 start_game()
 
