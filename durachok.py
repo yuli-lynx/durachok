@@ -253,20 +253,18 @@ def if_deffence_possible(attack_card, defender, trump, defence_cards_list) -> bo
         for card in defender.hand:
             if card.value > attack_card.value and card.suit == attack_card.suit:
                 defence_cards_list.append(card)
-                return True
             elif card.suit == trump.suit:
                 defence_cards_list.append(card)
-                return True
-        else:
-            return False
             
     if attack_card.suit == trump.suit:
         for card in defender.hand:
             if card.suit == trump.suit and card.value > attack_card.value:
                 defence_cards_list.append(card)
-                return True
-            else:
-                return False
+    
+    if len(defence_cards_list) >= 1:
+        return True
+    else:
+        return False
 
 # manages successful defence
 def cards_clash(attack_card: Card, defend_card: Card, trump: Card) -> bool:
