@@ -54,6 +54,7 @@ def check_input_card(card_name: str) -> bool:
 
 # converts string card into object card
 # (returns object card if it is in hand: if it's not there, asks to try again)
+# dumb but works - will later refine it
 def fetch_card(card_name: str, hand: list["Card"]) -> "Card":
     
     assert len(card_name) >= 2
@@ -98,8 +99,12 @@ def fetch_card(card_name: str, hand: list["Card"]) -> "Card":
         if card.value == card_value and card.suit == card_suit:
             return card
         
-    print("ERROR! Try again!")
+    print("It's either a typo, or there's no such card. Try again!")
     return None
+
+def print_info(player, trump_card):
+    print(f"Here's your hand: {player.hand}")
+    print(f"The trump suit is {trump_card.suit}")
 
 class Player:
 
@@ -184,24 +189,32 @@ def start_game():
         start_game()
     elif p1_lowest_trump_val < p2_lowest_trump_val:
         who_moves = player_1
+        who_defends = player_2
     elif p1_lowest_trump_val > p2_lowest_trump_val:
         who_moves = player_2
+        who_defends = player_1
 
     print("\nThe first one to make a move is " + who_moves.name + "!")
 
     while True: # tut budet is_finished peremennaya, kotoraya buted proveryat, est li karty v rukah oboih igrokov
         
         print("\n" + who_moves.name + ", it's your turn.")
-        print("Here's your hand: " + str(who_moves.hand))
-        print("The trump suit is " + trump.suit) # add background color for trump cards
+        print_info(who_moves, trump) # add background color for trump cards
         
-        request_attack_card = input(who_moves.name + ", pick a card to attack:")
+        attack_card = input(who_moves.name + ", pick a card to attack:")
         # function to convert input card into card object
         # check if it's correct and is in hand
 
-        print(fetch_card(request_attack_card, who_moves.hand))
+        print(fetch_card(attack_card, who_moves.hand))
+
+        print(f"\n {who_defends.name}, defend yourself!.")
+        print_info(who_defends, trump)
+
+        defend_card = input(f"{who_moves.name}, pick a card for defence:")
+        print(fetch_card(defend_card, who_defends.hand))
 
         break
+
 
 start_game()
 
