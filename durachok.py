@@ -270,7 +270,8 @@ def if_deffence_possible(attack_card, defender, trump, defence_cards_list) -> bo
 def cards_clash(attack_card: Card, defend_card: Card, trump: Card) -> bool:
     pass
 
-start_game()
+if __name__ == "__main__":
+    start_game()
 
 #One turn sequenceh b:
 
