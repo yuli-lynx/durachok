@@ -10,10 +10,10 @@ def find_lowest_trump(source_list: list, trump_suit: str) -> int:
                 minimum_val = card.value
             elif card.value < minimum_val:
                     minimum_val = card.value
-    if minimum_val == None:
-        return 0
+    if minimum_val != None:
+        return minimum_val
     else:
-        return minimum_val    
+        return 0 
 
 # deal cards from the deck          
 def deal_card(source_list: list, destination_list: list):
@@ -53,7 +53,7 @@ def shuffle(original_list: list):
 # (returns object card if it is in hand: if it's not there, asks to try again)
 # if successful, removes card from hand and appends to the list of field cards
 # dumb but works - will later refine it
-def fetch_card(card_name: str, hand: list["Card"], field_cards: list["Card"]) -> "Card":
+def fetch_card(card_name: str, hand: list["Card"]) -> "Card":
     
     assert len(card_name) >= 2
 
@@ -95,8 +95,6 @@ def fetch_card(card_name: str, hand: list["Card"], field_cards: list["Card"]) ->
 
     for card in hand: # use filter instead later
         if card.value == card_value and card.suit == card_suit:
-            hand.remove(card)
-            field_cards.append(card)
             return card
         
     print("It's either a typo, or there's no such card. Try again!")
@@ -140,6 +138,9 @@ class Card:
         if self.suit == "clubs":
             visual_suit = "\033[90m♣"
         return visual_value + visual_suit + "\033[0m"
+    
+    def __eq__(self, value):
+        pass
 
 # initial sequence to:
 # - create the deck
@@ -165,8 +166,8 @@ def start_game():
     print(f"The trump card is {trump.__repr__()}!")
     print(f"The trump suit is {trump.suit}!\n")
 
-    player_1 = Player(input("Hey Player_1, enter your name!\n").strip())
-    player_2 = Player(input("Hey Player_2, now you enter your name!\n").strip())
+    player_1 = Player("God") #(input("Hey Player_1, enter your name!\n").strip())
+    player_2 = Player("Devil") #(input("Hey Player_2, now you enter your name!\n").strip())
 
     while len(player_1.hand) < 6:
         deal_card(deck, player_1.hand)
@@ -178,7 +179,6 @@ def start_game():
     print("\n" + player_1.name + ":" + str(player_1.hand))
     print(player_2.name + ":" + str(player_2.hand))
 
-    #a functionality to check for the trump card with the lowest value
     ##display the lowest trumps from each hand
     #if there's no trump card in every hand, re-deal both hands and check again
     #rewrite the who_makes_a_move variable
@@ -186,15 +186,24 @@ def start_game():
     p1_lowest_trump_val = find_lowest_trump(player_1.hand, trump.suit)
     p2_lowest_trump_val = find_lowest_trump(player_2.hand, trump.suit)
 
-    if p1_lowest_trump_val == p2_lowest_trump_val:
+    print(f"The lowest trumps are: {player_1.name} - {p1_lowest_trump_val}, {player_2.name} - {p2_lowest_trump_val}.")
+
+    if p1_lowest_trump_val == p2_lowest_trump_val: # both players have zero trumps
         print("Oops! Sh*t happens - there are no trump cards! Let's start all over again.")
         start_game()
-    elif p1_lowest_trump_val < p2_lowest_trump_val:
-        who_moves = player_1
-        who_defends = player_2
-    elif p1_lowest_trump_val > p2_lowest_trump_val:
+    elif p1_lowest_trump_val !=0 and p2_lowest_trump_val !=0: # both players have at least one trump card
+        if p1_lowest_trump_val < p2_lowest_trump_val:
+            who_moves = player_1
+            who_defends = player_2
+        elif p1_lowest_trump_val > p2_lowest_trump_val:
+            who_moves = player_2
+            who_defends = player_1
+    elif p1_lowest_trump_val == 0: # p1 has zero trump cards
         who_moves = player_2
         who_defends = player_1
+    else: # p2 has zero trump cards
+        who_moves = player_1
+        who_defends = player_2
 
     print("\nThe first one to make a move is " + who_moves.name + "!")
 
@@ -202,11 +211,16 @@ def start_game():
         # will later add is_game_finished var or function->bool
         #to check if both players have cards left, and the game should continue
         
-        while True:
-            # will later add a variable is_turn_finished to check if it's time for a new turn
+        while True: # is_turn_finished == True:
             # when this turn ends, goes back to previous while loop to check if the game has finished
             
             cards_on_the_field = [] #keeps track of all cards currently in play
+
+            # stores cards that are valid for defence
+            valid_defence_cards = []
+
+            # stores cards that are valid for continuing attack
+            valid_attack_cards = []
 
             print("\n" + who_moves.name + ", it's your turn.")
             print_info(who_moves, trump) # add background color for trump cards
@@ -215,11 +229,11 @@ def start_game():
             # function to convert input card into card object
             # check if it's correct and is in hand
 
-            attack_card = fetch_card(input_attack_card, who_moves.hand, cards_on_the_field)
+            attack_card = fetch_card(input_attack_card, who_moves.hand)
 
             print(attack_card)
-
-            valid_defence_cards = []
+            who_moves.hand.remove(attack_card)
+            cards_on_the_field.append(attack_card)
 
             if if_deffence_possible(attack_card, who_defends, trump, valid_defence_cards) == True:
 
@@ -231,10 +245,14 @@ def start_game():
                 # if defend_card.lower().strip() == pass:
                 # who_defends.hand.append(cards_on_the_field)
                 # break
-                defence_card = fetch_card(input_defend_card, who_defends.hand, cards_on_the_field)
+                defence_card = fetch_card(input_defend_card, who_defends.hand)
             
                 if defence_card in valid_defence_cards:
                     print(defence_card)
+                    who_defends.hand.remove(defence_card)
+                    cards_on_the_field.append(defence_card)
+                    valid_defence_cards = []
+                
                 else:
                     print(f"{who_defends.name}, it's not a valid choice - try something else.")
 
@@ -242,9 +260,22 @@ def start_game():
                 print(f"Deffence is not possible. {who_defends.name}, you take.")
                 who_defends.hand.append(cards_on_the_field)
 
-            break
+                is_turn_finished = False
+
+            # TO DO
+            # - check for the possible cards for continuing attack, add them to the valid_attack_cards list
+            # - deal the cards to those players who have less than 6 cards
+            # - check if it's possible to continue with the game (if after attempting to deal the cards both players
+            # still have cards on hands)
+            # - change who_moves variable depending on the outcome of the clash
+            # - if there is at least one player without cards, end the game
+            # (create and change bool variable to break the whole game loop)
+
+            # FIX THE INITAL CHOICE OF THE FIRST PLAYER TO MOVE!!!
+
+            break # one clash loop
         
-        break
+        break # one whole game loop
 
 # checks if there is a possible move for defence (print_info will also go here)
 # appends a list of possible defence cards for current move
@@ -266,27 +297,10 @@ def if_deffence_possible(attack_card, defender, trump, defence_cards_list) -> bo
     else:
         return False
 
-# manages successful defence
-def cards_clash(attack_card: Card, defend_card: Card, trump: Card) -> bool:
+# do I even need this? let's see! lol    
+def if_add_attack_possible(player: Player, played_cards: list) -> list:
     pass
+
 
 if __name__ == "__main__":
     start_game()
-
-#One turn sequenceh b:
-
-#1.display players hand, trump suit, cards already on the table (in pairs)
-#2.decide who makes a move
-#   - create a variable: "c"-computer (if human was the last), "h" (if computer was the last)
-#   - the variable is only switched if the defence was successful = so there should be a check for that
-#3.describe a process of making a move - a separate function
-#   function for a human: chooses a card (create a process for that), with a visual
-#   function for a computer: chooses the card with the lowest value and not a trump, if possible
-#3.1 create a move_list to store all the cards involved in a move
-#4.describe a process of defence - a separate function
-#5.check if one more move is possible
-#6.check if the defence was succressful
-#   + rewrite the variable
-#   - add all the cards from the move_list to the looser's hand
-#7.check how many cards are in each hand and deal the cards until it's at least 6 in each hand
-#8. shuffle the cards in both hands
