@@ -253,17 +253,18 @@ def start_game():
                             who_moves = player_1
                             who_defends = player_2
                         discard_pile.append(cards_on_the_field)
-                        cards_on_the_field = []
+                        valid_attack_cards = []
+                        #cards_on_the_field = []
                 
-                    if len(deck) > 0:
-                        while len(who_moves.hand) < 6 and len(deck) > 0:
-                            deal_card(deck, who_moves.hand)
-                        while len(who_defends.hand) < 6 and len(deck) > 0:
-                            deal_card(deck, who_defends.hand)
-                    who_moves.hand = get_sorted_hand(who_moves.hand, trump)
-                    who_defends.hand = get_sorted_hand(who_defends.hand, trump)
-                    
-                    cards_on_the_field = []
+                        if len(deck) > 0:
+                            while len(who_moves.hand) < 6 and len(deck) > 0:
+                                deal_card(deck, who_moves.hand)
+                            while len(who_defends.hand) < 6 and len(deck) > 0:
+                                deal_card(deck, who_defends.hand)
+                        who_moves.hand = get_sorted_hand(who_moves.hand, trump)
+                        who_defends.hand = get_sorted_hand(who_defends.hand, trump)
+                        
+                        cards_on_the_field = []
 
                 else:
                     input_attack_card = input(who_moves.name + ", pick a card to attack:")
@@ -271,8 +272,6 @@ def start_game():
                 if input_attack_card.lower().strip() != "pass":
                     attack_card = fetch_card(input_attack_card, who_moves.hand)
 
-                    if len(valid_attack_cards) > 0 and attack_card in valid_attack_cards:
-                        valid_attack_cards.remove(attack_card)
                     if len(valid_attack_cards) > 0 and attack_card not in who_moves.hand:
                         valid_attack_cards.remove(attack_card)
 
@@ -280,75 +279,92 @@ def start_game():
                     who_moves.hand.remove(attack_card)
                     cards_on_the_field.append(attack_card)
 
-                if if_defence_possible(attack_card, who_defends, trump, valid_defence_cards) == True:
+                    if len(valid_attack_cards) > 0 and attack_card in valid_attack_cards:
+                        valid_attack_cards.remove(attack_card)
 
-                    print(f"\n{who_defends.name}, defend yourself!")
-                    print_info(who_defends, trump)
-                    print(f"These cards are valid for defence: {valid_defence_cards}.")
+                    if if_defence_possible(attack_card, who_defends, trump, valid_defence_cards) == True:
 
-                    input_defend_card = input(f"{who_defends.name}, pick a card for defence - or type PASS to take:")
-                    
-                    if input_defend_card.lower().strip() == "pass":
-                        who_defends.hand = who_defends.hand + cards_on_the_field
-                        who_defends.hand = get_sorted_hand(who_defends.hand, trump)
-                        # add a check if attacker can put more cards for defender to take
-                        print(f"\n{who_defends.name}, you take -\nhere's your hand: {who_defends.hand}")
-                        is_turn_finished = False
+                        print(f"\n{who_defends.name}, defend yourself!")
+                        print_info(who_defends, trump)
+                        print(f"These cards are valid for defence: {valid_defence_cards}.")
 
-                    defence_card = fetch_card(input_defend_card, who_defends.hand)
-                
-                    if defence_card in valid_defence_cards:
-                        print(defence_card)
-                        who_defends.hand.remove(defence_card)
-                        cards_on_the_field.append(defence_card)
-                        valid_defence_cards = []
+                        input_defend_card = input(f"{who_defends.name}, pick a card for defence - or type PASS to take:")
                         
-                        for a_card in who_moves.hand:
-                            for f_card in cards_on_the_field:
-                                if a_card.value == f_card.value and a_card not in cards_on_the_field and a_card not in valid_attack_cards:
-                                    valid_attack_cards.append(a_card)
-            
-                # else:
-                #     print(f"{who_defends.name}, it's not a valid choice - try something else.") # what to do with this lol
-                #     break
 
-                    if len(valid_attack_cards) == 0:
-                        if len(discard_pile) + len(cards_on_the_field) + len(who_defends.hand) < 36:
-                            print(f"\n\033[37;42mDefence was successful\033[0m - {who_defends.name}, get ready to attack.")
-                            if who_moves == player_1:
-                                who_moves = player_2
-                                who_defends = player_1
-                            else:
-                                who_moves = player_1
-                                who_defends = player_2
-                            discard_pile.append(cards_on_the_field)
-                            cards_on_the_field = []
-                            # check if there is a possible additional attack
-                    
-                            # deal the cards if there are any left before quitting this loop
+                        if input_defend_card != "pass":
+                        
+                            defence_card = fetch_card(input_defend_card, who_defends.hand)
+                        
+                            if defence_card in valid_defence_cards:
+                                print(defence_card)
+                                who_defends.hand.remove(defence_card)
+                                cards_on_the_field.append(defence_card)
+                                valid_defence_cards = []
+                                
+                                for a_card in who_moves.hand:
+                                    for f_card in cards_on_the_field:
+                                        if a_card.value == f_card.value and a_card not in cards_on_the_field and a_card not in valid_attack_cards:
+                                            valid_attack_cards.append(a_card)
+                
+                            # else:
+                            #     print(f"{who_defends.name}, it's not a valid choice - try something else.") # what to do with this lol
+                            #     break
+
+                            if len(valid_attack_cards) == 0 and len(cards_on_the_field)%2 == 0:
+                                if len(discard_pile) + len(cards_on_the_field) + len(who_defends.hand) < 36:
+                                    print(f"\n\033[37;42mDefence was successful\033[0m - {who_defends.name}, get ready to attack.")
+                                    if who_moves == player_1:
+                                        who_moves = player_2
+                                        who_defends = player_1
+                                    else:
+                                        who_moves = player_1
+                                        who_defends = player_2
+                                    discard_pile.append(cards_on_the_field)
+                                    cards_on_the_field = []
+                                    # check if there is a possible additional attack
+                            
+                                    # deal the cards if there are any left before quitting this loop
+                                    if len(deck) > 0:
+                                        while len(who_moves.hand) < 6 and len(deck) > 0:
+                                            deal_card(deck, who_moves.hand)
+                                        while len(who_defends.hand) < 6 and len(deck) > 0:
+                                            deal_card(deck, who_defends.hand)
+                                    who_moves.hand = get_sorted_hand(who_moves.hand, trump)
+                                    who_defends.hand = get_sorted_hand(who_defends.hand, trump)
+                                    
+                                    cards_on_the_field = []
+
+                        if input_defend_card.lower().strip() == "pass":
+                            who_defends.hand = who_defends.hand + cards_on_the_field
+                            who_defends.hand = get_sorted_hand(who_defends.hand, trump)
+                            # add a check if attacker can put more cards for defender to take
+                            print(f"\n{who_defends.name}, \033[97;44myou take\033[0m -\nhere's your hand now: {who_defends.hand},\nand you'll be defending again!:(")
+
                             if len(deck) > 0:
                                 while len(who_moves.hand) < 6 and len(deck) > 0:
                                     deal_card(deck, who_moves.hand)
-                                while len(who_defends.hand) < 6 and len(deck) > 0:
-                                    deal_card(deck, who_defends.hand)
+                                who_moves.hand = get_sorted_hand(who_moves.hand, trump)
+                                who_defends.hand = get_sorted_hand(who_defends.hand, trump)
+
+                                cards_on_the_field = []
+                                valid_attack_cards = []
+                                valid_defence_cards = []
+                            
+
+                    else:
+                        print(f"\n\033[47;34mDefence is not possible.\033[0m")
+                        # add a check if there are attack cards to add when defender takes
+                        print(f"{who_defends.name}, \033[97;44myou take\033[0m \u2620.")
+                        who_defends.hand = who_defends.hand + cards_on_the_field
+
+                        if len(deck) > 0:
+                            while len(who_moves.hand) < 6 and len(deck) > 0:
+                                deal_card(deck, who_moves.hand)
                             who_moves.hand = get_sorted_hand(who_moves.hand, trump)
                             who_defends.hand = get_sorted_hand(who_defends.hand, trump)
-                            
-                            cards_on_the_field = []
 
-                else:
-                    print(f"\n\033[47;34mDefence is not possible.\033[0m")
-                    # add a check if there are attack cards to add when defender takes
-                    print(f"{who_defends.name}, you take \u2620.")
-                    who_defends.hand = who_defends.hand + cards_on_the_field
+                        cards_on_the_field = []
 
-                    if len(deck) > 0:
-                        while len(who_moves.hand) < 6 and len(deck) > 0:
-                            deal_card(deck, who_moves.hand)
-                        who_moves.hand = get_sorted_hand(who_moves.hand, trump)
-                        who_defends.hand = get_sorted_hand(who_defends.hand, trump)
-
-                    cards_on_the_field = []
                     
                 if len(player_1.hand) > 0 and len(player_2.hand) > 0:
                     is_game_finished = True
